@@ -69,8 +69,9 @@ namespace Microsoft.Research.MultiWorldTesting.ClientLibrary
             Func<TContext, IReadOnlyCollection<TActionDependentFeature>> getContextFeaturesFunc,
             Stream vwModelStream = null,
             ITypeInspector typeInspector = null,
-            bool developmentMode = false)
-            : base(vwModelStream, typeInspector, developmentMode)
+            bool developmentMode = false,
+            Predicate<VowpalWabbitArguments> modelUpdatePredicate = null)
+            : base(vwModelStream, typeInspector, developmentMode, modelUpdatePredicate)
         {
             this.getContextFeaturesFunc = getContextFeaturesFunc;
         }

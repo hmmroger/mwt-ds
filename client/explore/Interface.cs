@@ -91,7 +91,9 @@ namespace Microsoft.Research.MultiWorldTesting.ExploreLibrary
 
     public interface IUpdatable<TModel>
     {
-        void Update(TModel model);
+        bool HasModel { get; }
+
+        bool Update(TModel model);
     }
 
     public interface IPolicy<in TContext> : IContextMapper<TContext, int>

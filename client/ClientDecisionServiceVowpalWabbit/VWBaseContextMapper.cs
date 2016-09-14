@@ -14,6 +14,7 @@ namespace Microsoft.Research.MultiWorldTesting.ClientLibrary
         protected ITypeInspector typeInspector;
         protected TPool vwPool;
         protected bool developmentMode;
+        protected Predicate<VowpalWabbitArguments> modelUpdatePredicate;
 
         /// <summary>
         /// Constructor using a memory stream.
@@ -22,26 +23,39 @@ namespace Microsoft.Research.MultiWorldTesting.ClientLibrary
         protected VWBaseContextMapper(
             Stream vwModelStream = null,
             ITypeInspector typeInspector = null,
-            bool developmentMode = false)
+            bool developmentMode = false,
+            Predicate<VowpalWabbitArguments> modelUpdatePredicate = null)
         {
             if (typeInspector == null)
-                typeInspector = JsonTypeInspector.Default;
+                typeInspector = TypeInspector.Default;
             this.typeInspector = typeInspector;
             this.developmentMode = developmentMode;
+            this.modelUpdatePredicate = modelUpdatePredicate;
             this.Update(vwModelStream);
+        }
+
+        public bool HasModel
+        {
+            get
+            {
+                return this.vwPool != null;
+            }
         }
 
         /// <summary>
         /// Update VW model from stream.
         /// </summary>
         /// <param name="modelStream">The model stream to load from.</param>
-        public void Update(Stream modelStream)
+        public bool Update(Stream modelStream)
         {
+            bool updated = false;
             if (modelStream == null)
-                return;
+            {
+                return updated;
+            }
 
             var model = new VowpalWabbitModel(
-                new VowpalWabbitSettings
+                new VowpalWabbitSettings("-t")
                     {
                         ModelStream = modelStream,
                         MaxExampleCacheSize = 1024,
@@ -50,13 +64,19 @@ namespace Microsoft.Research.MultiWorldTesting.ClientLibrary
                         EnableStringFloatCompact = this.developmentMode
                     });
 
-            if (this.vwPool == null)
+            if (this.modelUpdatePredicate != null && !this.modelUpdatePredicate(model.Arguments))
             {
-                this.vwPool = new TPool();
-                this.vwPool.UpdateModel(model);
+                return updated;
             }
-            else
-                this.vwPool.UpdateModel(model);
+
+            var newVWPool = Activator.CreateInstance(typeof(TPool), new object[] { model }) as TPool;
+            if (newVWPool != null)
+            {
+                this.vwPool = newVWPool;
+                updated = true;
+            }          
+            
+            return updated;
         }
 
         /// <summary>

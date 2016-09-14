@@ -6,13 +6,12 @@ using VW.Serializer;
 
 namespace Microsoft.Research.MultiWorldTesting.ClientLibrary
 {
-    public abstract class VWBaseContextMapper<TPool, TVowpalWabbit, TContext, TAction>
+    public abstract class VWBaseContextMapper<TVowpalWabbit, TContext, TAction>
         : IUpdatable<Stream>, IDisposable, IContextMapper<TContext, TAction>
-        where TPool : VowpalWabbitThreadedPredictionBase<TVowpalWabbit>, new()
         where TVowpalWabbit : class, IDisposable
     {
         protected ITypeInspector typeInspector;
-        protected TPool vwPool;
+        protected VowpalWabbitThreadedPredictionBase<TVowpalWabbit> vwPool;
         protected bool developmentMode;
         protected Predicate<VowpalWabbitArguments> modelUpdatePredicate;
 
@@ -69,7 +68,7 @@ namespace Microsoft.Research.MultiWorldTesting.ClientLibrary
                 return updated;
             }
 
-            var newVWPool = Activator.CreateInstance(typeof(TPool), new object[] { model }) as TPool;
+            var newVWPool = Activator.CreateInstance(typeof(VowpalWabbitThreadedPredictionBase<TVowpalWabbit>), new object[] { model }) as TPool;
             if (newVWPool != null)
             {
                 this.vwPool = newVWPool;
@@ -96,7 +95,7 @@ namespace Microsoft.Research.MultiWorldTesting.ClientLibrary
         {
             if (disposing)
             {
-                if (this.vwPool != default(TPool))
+                if (this.vwPool != null)
                 {
                     this.vwPool.Dispose();
                     this.vwPool = null;
@@ -117,6 +116,8 @@ namespace Microsoft.Research.MultiWorldTesting.ClientLibrary
                 return MapContext(vw.Value, context);    
             }
         }
+
+        protected abstract VowpalWabbitThreadedPredictionBase<TVowpalWabbit> CreatePool(VowpalWabbitSettings settings);
 
         protected abstract PolicyDecision<TAction> MapContext(TVowpalWabbit vw, TContext context);
     }

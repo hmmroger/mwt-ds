@@ -12,7 +12,7 @@ using VW.Serializer;
 namespace Microsoft.Research.MultiWorldTesting.ClientLibrary
 {
     public sealed class VWExplorerADF<TContext, TActionDependentFeature> :
-        VWBaseContextMapper<VowpalWabbitThreadedPrediction<TContext, TActionDependentFeature>, VowpalWabbit<TContext, TActionDependentFeature>, TContext, ActionProbability[]>,
+        VWBaseContextMapper<VowpalWabbit<TContext, TActionDependentFeature>, TContext, ActionProbability[]>,
         IContextMapper<TContext, ActionProbability[]>, INumberOfActionsProvider<TContext>
     {
         private readonly Func<TContext, IReadOnlyCollection<TActionDependentFeature>> getContextFeaturesFunc;
@@ -30,6 +30,11 @@ namespace Microsoft.Research.MultiWorldTesting.ClientLibrary
             : base(vwModelStream, typeInspector, developmentMode, modelUpdatePredicate)
         {
             this.getContextFeaturesFunc = getContextFeaturesFunc;
+        }
+
+        protected override VowpalWabbitThreadedPredictionBase<VowpalWabbit<TContext, TActionDependentFeature>> CreatePool(VowpalWabbitSettings settings)
+        {
+            return new VowpalWabbitThreadedPrediction<TContext, TActionDependentFeature>(settings);
         }
 
         protected override PolicyDecision<ActionProbability[]> MapContext(VowpalWabbit<TContext, TActionDependentFeature> vw, TContext context)

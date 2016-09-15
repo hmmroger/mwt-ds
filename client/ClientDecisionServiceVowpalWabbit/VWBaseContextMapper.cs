@@ -68,7 +68,15 @@ namespace Microsoft.Research.MultiWorldTesting.ClientLibrary
                 return updated;
             }
 
-            var newVWPool = Activator.CreateInstance(typeof(VowpalWabbitThreadedPredictionBase<TVowpalWabbit>), new object[] { model }) as TPool;
+            var newVWPool = this.CreatePool(new VowpalWabbitSettings
+            {
+                Model = model,
+                MaxExampleCacheSize = 1024,
+                TypeInspector = this.typeInspector,
+                EnableStringExampleGeneration = this.developmentMode,
+                EnableStringFloatCompact = this.developmentMode
+            });
+            
             if (newVWPool != null)
             {
                 this.vwPool = newVWPool;
